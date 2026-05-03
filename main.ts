@@ -686,5 +686,3 @@ namespace SimonSays {
         if (tmout >= tmdelta) tmout -= tmdelta
     }
 }
-
-SimonSays.clearSeries()
