@@ -526,7 +526,7 @@ namespace EtLedstrip {
 namespace SimonSays {
 
     let pinRed, pinGreen, pinBlue: DigitalPin
-    let led: EtLedstrip.Device
+    let leddev: EtLedstrip.Device
 
     let tminit = 1000
     let tmout = 0
@@ -545,12 +545,12 @@ namespace SimonSays {
         pins.setPull(pinRed, PinPullMode.PullDown)
         pins.setPull(pinGreen, PinPullMode.PullDown)
         pins.setPull(pinBlue, PinPullMode.PullDown)
-        led = EtLedstrip.create(DigitalPin.P8, 1)
+        leddev = EtLedstrip.create(DigitalPin.P8, 1)
     }
 
     export function clearColor() {
-		led.setClear()
-		led.show()
+        leddev.setClear()
+        leddev.show()
     }
 
     export function clearSeries() {
@@ -572,8 +572,8 @@ namespace SimonSays {
     export function showCurrentColor() {
         clearColor()
         basic.pause(500)
-		led.setColor(curColor)
-		led.show()
+        leddev.setColor(curColor)
+        leddev.show()
     }
 
     export function waitForButton(): ETcolor {
