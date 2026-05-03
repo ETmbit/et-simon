@@ -523,7 +523,7 @@ namespace EtLedstrip {
 //  END INCLUDE  //
 ///////////////////
 
-namespace SimonSays {
+namespace EtSimon {
 
     let pinRed, pinGreen, pinBlue: DigitalPin
     let leddev: EtLedstrip.Device
