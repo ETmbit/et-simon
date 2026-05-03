@@ -14,6 +14,35 @@ Depends on: None
 
 const ET_LOW = 0
 const ET_HIGH = 1
+enum ETpins {
+    //% block="pin P0"
+    //% block.loc.nl="pin P0"
+    P0 = DigitalPin.P0,
+    //% block="pin P1"
+    //% block.loc.nl="pin P1"
+    P1 = DigitalPin.P1,
+    //% block="pin P2"
+    //% block.loc.nl="pin P2"
+    P2 = DigitalPin.P2,
+    //% block="pin P8"
+    //% block.loc.nl="pin P8"
+    P8 = DigitalPin.P8,
+    //% block="pin P12"
+    //% block.loc.nl="pin P12"
+    P12 = DigitalPin.P12,
+    //% block="pin P13"
+    //% block.loc.nl="pin P13"
+    P13 = DigitalPin.P13,
+    //% block="pin P14"
+    //% block.loc.nl="pin P14"
+    P14 = DigitalPin.P14,
+    //% block="pin P15"
+    //% block.loc.nl="pin P15"
+    P15 = DigitalPin.P15,
+    //% block="pin P16"
+    //% block.loc.nl="pin P16"
+    P16 = DigitalPin.P16
+}
 
 enum ETstate {
     //% block="off"
@@ -348,302 +377,84 @@ namespace etbasic {
 //  END INCLUDE  //
 ///////////////////
 
-//////////////////////
-//  INCLUDE         //
-//  et-ledstrip.ts  //
-//////////////////////
-
-enum NeopixelMode {
-    GRB = 1,
-    RGBW = 2,
-    RGB = 3
-}
-
-namespace EtLedstrip {
-
-    export class Device {
-
-        pin: DigitalPin
-        max: number
-        mode: NeopixelMode
-        buffer: Buffer
-        size: number
-        bright: number = 10
-
-        constructor(pin: DigitalPin, leds: number, mode: NeopixelMode) {
-            this.pin = pin
-            this.max = leds - 1
-            this.mode = mode
-            this.size = leds * (mode == NeopixelMode.RGBW ? 4 : 3)
-            this.buffer = pins.createBuffer(this.size)
-        }
-
-        show() {
-            light.sendWS2812Buffer(this.buffer, this.pin)
-        }
-
-        setPixelRGB(offset: number, red: number, green: number, blue: number, white: number = 0): void {
-            offset *= (this.mode == NeopixelMode.RGBW ? 4 : 3)
-            switch (this.mode) {
-                case NeopixelMode.GRB:
-                    this.buffer[offset + 0] = Math.floor(green * this.bright / 100)
-                    this.buffer[offset + 1] = Math.floor(red * this.bright / 100);
-                    this.buffer[offset + 2] = Math.floor(blue * this.bright / 100);
-                    break;
-                case NeopixelMode.RGB:
-                    this.buffer[offset + 0] = Math.floor(red * this.bright / 100);
-                    this.buffer[offset + 1] = Math.floor(green * this.bright / 100);
-                    this.buffer[offset + 2] = Math.floor(blue * this.bright / 100);
-                    break;
-                case NeopixelMode.RGBW:
-                    this.buffer[offset + 0] = Math.floor(red * this.bright / 100);
-                    this.buffer[offset + 1] = Math.floor(green * this.bright / 100);
-                    this.buffer[offset + 2] = Math.floor(blue * this.bright / 100);
-                    this.buffer[offset + 3] = Math.floor(white * this.bright / 100);
-                    break;
-            }
-        }
-
-        setPixelColor(pixel: number, color: ETcolor, white: number = 0): void {
-            if (pixel < 0 || pixel >= 8)
-                return;
-            let rgb = etFromColor(color)
-            let red = (rgb >> 16) & 0xFF;
-            let green = (rgb >> 8) & 0xFF;
-            let blue = (rgb) & 0xFF;
-            this.setPixelRGB(pixel, red, green, blue, white)
-        }
-
-        setRGB(red: number, green: number, blue: number, white: number = 0) {
-            for (let i = 0; i < 8; ++i)
-                this.setPixelRGB(i, red, green, blue, white)
-        }
-
-        setColor(color: ETcolor, white: number = 0) {
-            let rgb = etFromColor(color)
-            let red = (rgb >> 16) & 0xFF;
-            let green = (rgb >> 8) & 0xFF;
-            let blue = (rgb) & 0xFF;
-            for (let i = 0; i < 8; ++i)
-                this.setPixelRGB(i, red, green, blue, white)
-        }
-
-        setClear(): void {
-            this.buffer.fill(0, 0, this.size);
-        }
-
-        setBrightness(brightness: number) {
-            if (brightness < 0) brightness = 0
-            if (brightness > 100) brightness = 100
-            // small steps at low brightness and big steps at high brightness
-            brightness = (brightness ^ 2 / 100)
-            this.bright = brightness
-        }
-
-        setRotate(rotation: ETrotate): void {
-            let offset = (this.mode == NeopixelMode.RGBW ? 4 : 3)
-            if (rotation == ETrotate.Clockwise)
-                this.buffer.rotate(-offset, 0, this.size)
-            else
-                this.buffer.rotate(offset, 0, this.size)
-        }
-
-        rainbow(rotation: ETrotate, pace: ETpace = ETpace.Normal) {
-            if (rotation == ETrotate.Clockwise) {
-                this.setPixelColor(0, ETcolor.Red)
-                this.setPixelColor(1, ETcolor.Orange)
-                this.setPixelColor(2, ETcolor.Yellow)
-                this.setPixelColor(3, ETcolor.Green)
-                this.setPixelColor(4, ETcolor.Blue)
-                this.setPixelColor(5, ETcolor.Indigo)
-                this.setPixelColor(6, ETcolor.Violet)
-                this.setPixelColor(7, ETcolor.Purple)
-            }
-            else {
-                this.setPixelColor(7, ETcolor.Red)
-                this.setPixelColor(6, ETcolor.Orange)
-                this.setPixelColor(5, ETcolor.Yellow)
-                this.setPixelColor(4, ETcolor.Green)
-                this.setPixelColor(3, ETcolor.Blue)
-                this.setPixelColor(2, ETcolor.Indigo)
-                this.setPixelColor(1, ETcolor.Violet)
-                this.setPixelColor(0, ETcolor.Purple)
-            }
-            this.show()
-            basic.pause(pace)
-            pace = (pace + 1) * 75
-            for (let i = 0; i < this.max; i++) {
-                this.setRotate(rotation)
-                this.show()
-                basic.pause(pace)
-            }
-        }
-
-        snake(color: ETcolor, rotation: ETrotate, pace: ETpace = ETpace.Normal) {
-            let rgb = etFromColor(color)
-            let red = (rgb >> 16) & 0xFF;
-            let green = (rgb >> 8) & 0xFF;
-            let blue = (rgb) & 0xFF;
-            this.setClear();
-            this.show()
-            pace = (pace + 1) * 75
-            for (let i = this.max; i >= 0; i--) {
-                if (rotation == ETrotate.Clockwise)
-                    this.setPixelRGB(this.max - i, red, green, blue)
-                else
-                    this.setPixelRGB(i, red, green, blue)
-                this.show()
-                basic.pause(pace)
-            }
-            this.show()
-            for (let i = this.max - 1; i >= 0; i--) {
-                if (rotation == ETrotate.Clockwise)
-                    this.setPixelRGB(this.max - i, 0, 0, 0)
-                else
-                    this.setPixelRGB(i, 0, 0, 0)
-                this.show()
-                basic.pause(pace)
-            }
-            if (rotation == ETrotate.Clockwise)
-                this.setPixelRGB(0, 0, 0, 0)
-            else
-                this.setPixelRGB(this.max, 0, 0, 0)
-            this.show()
-            basic.pause(pace)
-        }
-    }
-
-    export function create(pin: DigitalPin, leds: number, mode: NeopixelMode = NeopixelMode.GRB): Device {
-        let device = new Device(pin, leds, mode)
-        return device
-    }
-}
-
-///////////////////
-//  END INCLUDE  //
-///////////////////
-
+//% color="#66AA22" icon="\uf111"
+//% block="Simon Says"
+//% block.loc.nl="Simon Says"
 namespace EtSimon {
 
-    let pinRed, pinGreen, pinBlue: DigitalPin
-    let leddev: EtLedstrip.Device
+    let options: (()=>void)[] = []
+    let buttonHandler: ()=>number
+    let clearHandler: ()=>void
 
     let tminit = 1000
     let tmout = 0
     let tmdelta = 100
-    let series: ETcolor[] = []
+    let series: number[] = []
     let ixseries = 0
-    let curColor = ETcolor.Black
-    let butColor = ETcolor.Black
+    let ixoption = -1
+    let ixbutton = -1
     let busy = false
     let points = 0
 
-    export function setPins(ledPin: DigitalPin, redPin: DigitalPin, greenPin: DigitalPin, bluePin: DigitalPin) {
-        pinRed = redPin
-        pinGreen = greenPin
-        pinBlue = bluePin
-        pins.setPull(pinRed, PinPullMode.PullDown)
-        pins.setPull(pinGreen, PinPullMode.PullDown)
-        pins.setPull(pinBlue, PinPullMode.PullDown)
-        leddev = EtLedstrip.create(DigitalPin.P8, 1)
+    let ISGAMING = false
+
+    export function registerOptionHandler(handler: ()=>void) {
+        options.push(handler)
     }
 
-    export function clearColor() {
-        leddev.setClear()
-        leddev.show()
+    export function registerButtonHandler(handler: ()=>number) {
+        buttonHandler = handler
     }
 
-    export function clearSeries() {
-        busy = false
-        series = []
-        ixseries = 0
-        points = 0
-        curColor = ETcolor.Black
-        butColor = ETcolor.Black
-        clearColor()
+    export function registerClearHandler(handler: () => void) {
+        clearHandler = handler
     }
 
-    export function restartSeries() {
-        ixseries = 0
-        curColor = ETcolor.Black
-        butColor = ETcolor.Black
-    }
-
-    export function showCurrentColor() {
-        clearColor()
-        basic.pause(500)
-        leddev.setColor(curColor)
-        leddev.show()
-    }
-
-    export function waitForButton(): ETcolor {
-        butColor = ETcolor.Black
-        let tm = control.millis() + tmout
-        while (tm > control.millis()) {
-            if (pins.digitalReadPin(DigitalPin.P0) == 1) {
-                while (pins.digitalReadPin(DigitalPin.P0) == 1) pause(1)
-                butColor = ETcolor.Red
-                break
-            } else
-                if (pins.digitalReadPin(DigitalPin.P1) == 1) {
-                    while (pins.digitalReadPin(DigitalPin.P1) == 1) pause(1)
-                    butColor = ETcolor.Green
-                    break
-                } else
-                    if (pins.digitalReadPin(DigitalPin.P2) == 1) {
-                        while (pins.digitalReadPin(DigitalPin.P2) == 1) pause(1)
-                        butColor = ETcolor.Blue
-                        break
-                    }
-            basic.pause(1)
-        }
-        return butColor
+    export function clearOption() {
+        if (clearHandler) clearHandler()
     }
 
     export function extendSeries() {
-        let clr = etbasic.randomInt(0, 2)
-        let color: ETcolor
-        switch (clr) {
-            case 0: color = ETcolor.Red; break
-            case 1: color = ETcolor.Green; break
-            case 2: color = ETcolor.Blue; break
-        }
-        series.push(color)
+        let opt = etbasic.randomInt(0, options.length - 1)
+        series.push(opt)
     }
 
     export function getSeriesLength(): number {
         return series.length
     }
 
-    export function setFirstColor() {
+    export function showCurrentOption() {
+        clearOption()
+        basic.pause(500)
+        if (ixseries < series.length && series[ixseries] < options.length)
+            options[series[ixseries]]()
+    }
+
+    export function setFirstOption() {
         ixseries = 0
         tmout = tminit
         if (series.length) {
             busy = true
-            curColor = series[ixseries]
+            ixoption = series[ixseries]
         }
         else {
             busy = false
-            curColor = ETcolor.Black
+            ixoption = -1
         }
     }
 
-    export function setNextColor() {
+    export function setNextOption() {
         tmout -= tmdelta
         if (tmout < 100) tmout = 100
         if (ixseries < series.length)
             ixseries += 1
         if (ixseries == series.length) {
             busy = false
-            curColor = ETcolor.Black
+            ixoption = -1
         }
         else {
-            curColor = series[ixseries]
+            ixoption = series[ixseries]
         }
-    }
-
-    export function isSeriesEnd(): boolean {
-        return (ixseries >= series.length)
     }
 
     export function isSeriesBusy(): boolean {
@@ -652,22 +463,6 @@ namespace EtSimon {
 
     export function getCurrentIndex(): number {
         return (ixseries >= 0 && ixseries < series.length ? ixseries : -1)
-    }
-
-    export function getCurrentColor(): ETcolor {
-        return curColor
-    }
-
-    export function getButtonColor(): ETcolor {
-        return butColor
-    }
-
-    export function isMatchingColor(): boolean {
-        return (curColor == butColor)
-    }
-
-    export function increasePoints() {
-        points += 1
     }
 
     export function getPoints(): number {
@@ -685,4 +480,166 @@ namespace EtSimon {
     export function setNextTimeout() {
         if (tmout >= tmdelta) tmout -= tmdelta
     }
+
+    //% block="show the points"
+    //% block.loc.nl="toon de score"
+    export function showPoints() {
+        basic.clearScreen()
+        let points = EtSimon.getPoints()
+        basic.showNumber(points)
+        if (points < 10) etbasic.wait(2)
+        clearOption()
+        basic.showArrow(ArrowNames.West)
+    }
+
+    //% block="increase the points"
+    //% block.loc.nl="verhoog de score"
+    export function increasePoints() {
+        points += 1
+    }
+
+    //% block="chosen wrongly"
+    //% block.loc.nl="verkeerd gekozen"
+    export function hasFailed(): boolean {
+        return (ixoption !== ixbutton)
+    }
+
+    //% block="chosen rightly"
+    //% block.loc.nl="juist gekozen"
+    export function isSuccess(): boolean {
+        return (ixoption === ixbutton)
+    }
+
+    //% block="the presented option"
+    //% block.loc.nl="de huidige"
+    export function getCurrentOption(): number {
+        return ixoption
+    }
+
+    //% block="the choice"
+    //% block.loc.nl="de keuze"
+    export function getButtonOption(): number {
+        return ixbutton
+    }
+
+    //% block="wait until a choice is made"
+    //% block.loc.nl="wacht tot er is gekozen"
+    export function waitForButton() {
+        if (buttonHandler)
+            ixbutton = buttonHandler()
+        else
+            ixbutton = -1
+        return ixbutton
+    }
+
+    //% block="ask the next"
+    //% block.loc.nl="vraag de volgende"
+    export function askNextOption() {
+        showNextOption()
+    }
+
+    //% block="ask the first"
+    //% block.loc.nl="vraag de eerste"
+    export function askFirstColor() {
+        clearOption()
+        basic.clearScreen()
+        etbasic.wait(0.5)
+        basic.showIcon(IconNames.Heart)
+        showFirstOption()
+    }
+
+    //% block="ask all"
+    //% block.loc.nl="vraag alles"
+    export function askAllColors() {
+        showFirstOption()
+        while (isInSeries()) {
+            waitForButton()
+            if (ixbutton === ixoption) {
+                increasePoints()
+                setNextOption()
+            }
+            else
+                stopGame()
+        }
+    }
+
+    //% block="show the next"
+    //% block.loc.nl="toon de volgende"
+    export function showNextOption() {
+        setNextOption()
+        showCurrentOption()
+        etbasic.wait(0.5)
+        clearOption()
+        etbasic.wait(0.2)
+    }
+
+    //% block="show the first"
+    //% block.loc.nl="toon de eerste"
+    export function showFirstOption() {
+        basic.showIcon(IconNames.SmallHeart)
+        etbasic.wait(0.5)
+        setFirstOption()
+        showCurrentOption()
+        etbasic.wait(0.3)
+        clearOption()
+        etbasic.wait(0.2)
+    }
+
+    //% block="show all"
+    //% block.loc.nl="toon alles"
+    export function showAllOptions() {
+        showFirstOption()
+        while (isInSeries())
+            showNextOption()
+    }
+
+    //% block="append the series"
+    //% block.loc.nl="voeg een nieuwe aan de serie toe"
+    export function appendOption() {
+        EtSimon.extendSeries()
+    }
+
+    //% block="all have been chosen rightly"
+    //% block.loc.nl="alles goed is gekozen"
+    export function isSeriesEnd(): boolean {
+        return (ISGAMING && (ixseries >= series.length))
+    }
+
+    //% block="still continuing the series"
+    //% block.loc.nl="nog met de serie bezig"
+    export function isInSeries(): boolean {
+        return (ISGAMING && EtSimon.isSeriesBusy())
+    }
+
+    //% block="the next series is required"
+    //% block.loc.nl="de volgende serie nodig is"
+    export function restartSeries() {
+        ixseries = 0
+    }
+
+    //% block="the game is busy"
+    //% block.loc.nl="het spel bezig is"
+    export function isGaming(): boolean {
+        return ISGAMING
+    }
+
+    //% block="stop the game"
+    //% block.loc.nl="stop het spel"
+    export function stopGame() {
+        basic.showIcon(IconNames.Sad)
+        ISGAMING = false
+    }
+
+    //% block="start the game"
+    //% block.loc.nl="start het spel"
+    export function startGame() {
+        busy = false
+        series = []
+        ixseries = 0
+        points = 0
+        clearOption()
+        ISGAMING = true
+    }
 }
+
+basic.showArrow(ArrowNames.West)
