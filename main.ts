@@ -587,7 +587,7 @@ namespace SimonSays {
             } else
                 if (pins.digitalReadPin(DigitalPin.P1) == 1) {
                     while (pins.digitalReadPin(DigitalPin.P1) == 1) pause(1)
-                    butColor = ETcolor.Yellow
+                    butColor = ETcolor.Green
                     break
                 } else
                     if (pins.digitalReadPin(DigitalPin.P2) == 1) {
@@ -605,7 +605,7 @@ namespace SimonSays {
         let color: ETcolor
         switch (clr) {
             case 0: color = ETcolor.Red; break
-            case 1: color = ETcolor.Yellow; break
+            case 1: color = ETcolor.Green; break
             case 2: color = ETcolor.Blue; break
         }
         series.push(color)
